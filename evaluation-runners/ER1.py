@@ -1,14 +1,4 @@
-import os
-import sys
-
-# Move working directory to parent folder
-working_dir = os.getcwd()
-os.chdir("../")
-sys.path.append(os.getcwd())
-
-from ExperimentRunner import run_test
-
-EPICpy_Path = '../EPICpy/Tests'
+from evaluationRunnerCommonFunctions import EPICpy_Path, run_test
 
 if __name__ == "__main__":
     strategy = 1

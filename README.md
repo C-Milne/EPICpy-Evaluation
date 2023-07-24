@@ -29,13 +29,27 @@ These files are a shortcut to running the following command:
 python3 ExperimentRunner.py X
 ```
 
-From these files the problems attempted by the 
+From these files the problems attempted by the planner are those which are uncommented within
+the file.
 
-Note that 'ER' files using the repositories root directory as the working directory.
+Note that 'ER' files use the repositories root directory as the working directory.
 
-These files can be run from the command line using the following command
+These files can be run from the command line using the following command:
 ```commandline
 python3 ER1.py
 ```
 
+This command can also be run from the root directory of the repo using the command:
+```commandline
+python3 ./evaluation-runners/ER1.py
+```
+
 # Files Titled 'ExperimentRunner1.sh'
+
+The directory 'evaluation-runners' contains files of the style 'ExperimentRunnerX.sh' where
+X is some number. These files are SBATCH files which can be used to submit the evaluation of
+a planner configuration to the SLURM queue.
+
+From these files, SBATCH attributes such as job time, amount of cores, RAM etc. can be set.
+
+# Planner Configurations
