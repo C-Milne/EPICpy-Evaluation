@@ -43,6 +43,11 @@ from Solver.Progress_Tracking.panda_verify_format import PandaVerifyFormatTracke
 
 
 def setup_controller(controller, strategy):
+    """
+    :param controller: Runner Object
+    :param strategy: Integer correlating to some predefined planner configuration
+    :return: String of path where results should be recorded
+    """
     if strategy == 1:
         """Hamming Distance (Seen States)"""
         controller.set_solver(PartialOrderNoveltyLightSolver)

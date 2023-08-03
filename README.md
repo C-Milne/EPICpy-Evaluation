@@ -96,6 +96,19 @@ a planner configuration to the SLURM queue.
 
 From these files, SBATCH attributes such as job time, amount of cores, RAM etc. can be set.
 
+
+# calculateResultsStats.py
+This file contains a single function which is used to generate a quick summary of a specified result file.
+
+The summary is inserted at the top of the file and states the **Total Amount of Problems Attempted**, 
+**Amount of Problems that were Solved**, and the **Percentage of Problems Solved**. Each domain is then listed showing
+the **Amount of Problems Attempted**, and the **IPC Score Achieved for the Solved Problems**. Finally, the 
+**Total Score** is written.
+
+The IPC Score is calculated as follows:
+
+
+
 # Planner Configurations
 
 Below is a table showing which planner configuration each number corresponds to.

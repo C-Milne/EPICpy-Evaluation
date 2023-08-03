@@ -13,6 +13,7 @@ from ExperiementRunnerPlannerSetup import (setup_controller, Runner, ProblemPred
                                            PandaVerifyFormatTracker)
 
 
+# This is the message which is displayed upon successful verification of a plan from the PANDA plan verification module
 PANDAVERIFYSUCCESSFULLOUTPUT = "IDs of subtasks used in the plan exist: trueTasks declared in plan actually exist and " \
                                "can be instantiated as given: trueMethods don't contain duplicate subtasks: " \
                                "trueMethods don't contain orphaned " \
@@ -22,34 +23,46 @@ PANDAVERIFYSUCCESSFULLOUTPUT = "IDs of subtasks used in the plan exist: trueTask
 
 
 def run_test(domain_file_path, problem_file_path, strategy):
+    """
+    :param domain_file_path: String of file path of the problem's domain file
+    :param problem_file_path: String of file path of the problem's problem file
+    :param strategy: Integer correlating to planner configuration
+    :return: None
+    """
     print(domain_file_path)
     print(problem_file_path)
-    controller = Runner(domain_file_path, problem_file_path)
+    controller = Runner(domain_file_path, problem_file_path)    # Initialise controller
 
-    file_name = setup_controller(controller, strategy)
+    file_name = setup_controller(controller, strategy)  # Setup planner with specified configuration
 
+    # Parse files
     controller.parse_domain()
     controller.parse_problem()
 
     # Start Search
-    print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
-    setup_start_time = time.time()
-    controller.solver.solve(search=False)
-    setup_end_time = time.time()
+    print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))     # Print start time
+    setup_start_time = time.time()  # Setup start time
+
+    controller.solver.solve(search=False)   # Setup search
+
+    setup_end_time = time.time()    # Setup end time
     setup_time = setup_end_time - setup_start_time
+
     num_expansions = 0
-    res = None
-    solve_start_time = time.time()
+    res = None  # Initially no plan has been returned
+
+    solve_start_time = time.time()  # Solving start time
+    # While no result and time used is less than specified duration
     while time.time() - solve_start_time < 500000 and not res:
-        res = controller.solver._search(True)
+        res = controller.solver._search(True)   # Run next search step
         num_expansions += 1
-    solve_end_time = time.time()
+    solve_end_time = time.time()    # Solving end time
     solve_time = solve_end_time - solve_start_time
 
     solved = True
-    if not res:
-        # Find the model with the most operations
+    if not res:     # If no result returned
         solved = False
+        # Find the model with the most operations
         models = controller.solver.search_models.get_model_list()
         if len(models) > 0:
             res = models[0]
@@ -89,6 +102,7 @@ def run_test(domain_file_path, problem_file_path, strategy):
         num_novel_methods = 'N/A'
         num_not_novel_methods = 'N/A'
 
+    # Get amount of facts in the final state
     if res is not None:
         model_elements = len(res.current_state.elements)
     else:
@@ -103,18 +117,23 @@ def run_test(domain_file_path, problem_file_path, strategy):
         num_novel_method_not_novel_state = 'N/A'
         num_novel_methods_novel_state = 'N/A'
 
+    # Check if we should validate the plan returned
     if res is not None and isinstance(res, PandaVerifyModel) and \
             isinstance(res.progress_tracker, PandaVerifyFormatTracker) and sys.platform != "win32":
-        output_file_name = "{}.txt".format(strategy)
-        controller.output_result_file(res, output_file_name)
+        output_file_name = "{}.txt".format(strategy)    # File name for plan to be written to
+        controller.output_result_file(res, output_file_name)    # Write plan to file
+
         # print('OUTPUT FILE NAME: {}'.format(output_file_name))
         # print('VERIFYING')
+
+        # Run PANDA plan verification
         result = subprocess.run(
             './pandaPIparser -C --verify {} {} output/{}'.format(domain_file_path, problem_file_path, output_file_name),
             shell=True, capture_output=True, text=True)
 
-        output = ''.join(s for s in str(result.stdout) if 31 < ord(s) < 126)
+        output = ''.join(s for s in str(result.stdout) if 31 < ord(s) < 126)    # Get plan verification output
 
+        # Check if successful verification message in output
         if PANDAVERIFYSUCCESSFULLOUTPUT in output:
             verified = True
         else:
@@ -137,6 +156,12 @@ def run_test(domain_file_path, problem_file_path, strategy):
 
 
 def calculate_all_possible_facts_and_pairings(domain, problem, model):
+    """
+    :param domain: Domain object
+    :param problem: Problem object
+    :param model: Model object
+    :return: (amount of possible facts, amount of possible fact pairings, amount of actual pairings)
+    """
     # For each predicate in the domain
     possible_facts = []
     total_possible_pairs = 0
@@ -186,15 +211,42 @@ def write_to_file(problem_name, number_expansions, solve_time, setup_time,
                   num_novel_methods, num_not_novel_methods,
                   num_novel_method_not_novel_state, num_novel_methods_novel_state,
                   solved, verified, file_name):
+    """
+    :param problem_name: String of problem name e.g. 'Rover/p02.hddl'
+    :param number_expansions: Integer of expansions required to find a result
+    :param solve_time: Float of time taken to solve (seconds)
+    :param setup_time: Fload of time taken to setup (seconds)
+    :param all_possible_facts: Integer of all possible facts
+    :param actual_facts: Integer of amount of facts in the final state
+    :param percentage_facts: Float of percentage of possible facts in the final state
+    :param total_possible_pairs: Integer of amount of possible fact pairings
+    :param total_actual_pairs: Integer of amount of actual fact pairings in the final state
+    :param percentage_pairs: Float of percentage of possible pairings in final state
+    :param num_novel_states: Integer of amount of states which were novel
+    :param num_not_novel_states: Integer of amount of states which were NOT novel
+    :param percentage_novel_states: Float of percentage of states which were novel
+    :param num_unique_facts: Integer of amount of unique facts seen
+    :param num_novel_methods: Integer of amount of novel methods used
+    :param num_not_novel_methods: Integer of amount of NON-novel methods used
+    :param num_novel_method_not_novel_state: Integer of amount of times a novel method was used on a non-novel state
+    :param num_novel_methods_novel_state: Integer of amount of times a novel method was used on a novel state
+    :param solved: Boolean - was problem solved
+    :param verified: Boolean - was problem verified
+    :param file_name: String of file name to write results to
+    :return: None
+    """
     if os.path.exists(file_name):
         # If file exists open it and append
         write_file = open(file_name, 'a')
     else:
+        # Check if the file we are writing to is within a subdirectory
         if '/' in file_name:
-            target_folder = file_name.split('/')[0]
+            target_folder = file_name.split('/')[0]     # Get name of target subdirectory
+            # If subdirectory does not exist, create it
             if not os.path.exists(target_folder):
                 os.mkdir(target_folder)
-        # If file does not exist make one
+
+        # File does not exist, make one
         write_file = open(file_name, 'w')
         write_file.write(
             'Problem,number_expansions,solve_time,setup_time,' +
@@ -205,6 +257,7 @@ def write_to_file(problem_name, number_expansions, solve_time, setup_time,
             'num_novel_methods,num_not_novel_methods,' +
             'num_novel_method_not_novel_state,num_novel_methods_novel_state,' +
             'Verified,Solved')
+    # Write data to file
     write_file.write(
         "\n{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}".format(problem_name, number_expansions,
                                                                                solve_time, setup_time,

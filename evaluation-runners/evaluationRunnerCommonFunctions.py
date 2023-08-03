@@ -1,6 +1,7 @@
 import os
 import sys
 
+# Set the path to EPICpy
 global EPICpy_Path
 EPICpy_Path = '../EPICpy/Tests'
 
